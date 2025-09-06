@@ -1,0 +1,29 @@
+from aiogram import Bot, Dispatcher, executor, types
+import openpyxl
+import os
+
+API_TOKEN = os.getenv("BOT_TOKEN")  # Tokenни Railwayдан оламиз
+
+bot = Bot(token=API_TOKEN)
+dp = Dispatcher(bot)
+
+def load_products():
+    workbook = openpyxl.load_workbook("products.xlsx")
+    sheet = workbook.active
+    products = []
+    for row in sheet.iter_rows(min_row=2, values_only=True):
+        name, price, stock = row
+        products.append(f"{name} - {price} сўм (қолдиқ: {stock} дона)")
+    return "\n".join(products)
+
+@dp.message_handler(commands=["start"])
+async def start(message: types.Message):
+    await message.answer("Салом! 🛒 Дўконимизга хуш келибсиз!\nМеню учун /menu")
+
+@dp.message_handler(commands=["menu"])
+async def menu(message: types.Message):
+    product_list = load_products()
+    await message.answer(f"📋 Меню:\n\n{product_list}")
+
+if __name__ == "__main__":
+    executor.start_polling(dp, skip_updates=True)
